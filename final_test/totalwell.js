@@ -3,10 +3,6 @@ let video, facemesh, predictions = [];
 let mouthOpen = false, mouthOpenStart = 0;
 let THRESHOLD = 15;      // 입 벌어진 정도 기준값(실험하면서 조절)
 let smokeCount = 0, scene = 0;
-let cigaretteSmoke; // 담배 연기
-let isSmoking = false;
-//let cigaretteX1,cigaretteY1;
-
 
 let imgCiga1, imgCiga2, imgCiga3, imgCigaTrash, cigaImg;
 let defaultTownImg, clickAllImg, clickMountainImg, clickSwarImg;
@@ -80,11 +76,10 @@ function setup() {
   //fullscreen(true);
   createCanvas(windowWidth, windowHeight);
   
+  
+
   cigaretteX = width / 2;
   cigaretteY = height / 2;
-  
-  //cigaretteSmoke = new CigaretteSmoke(cigaretteX1, cigaretteY1);
-  
 
   // 웹캠 세팅
   setupFaceVideo();
@@ -130,8 +125,8 @@ function setupVideoAndModel() {
 }
 
 function draw() {
-  //clear();
-  if (scene === 0)
+  clear();
+  if (scene == 0)
   {
     drawScene0();
   }
@@ -192,7 +187,7 @@ function drawScene0()
   textSize(24);
   text("김나영, 문수현, 서예린", width / 2, height / 2 + 30);
 
-  setTimeout(() => scene = 1, 3000);
+  setTimeout(() => scene = 1, 5000);
 }
 
 
@@ -206,25 +201,8 @@ function drawScene1() {
   // 왼쪽 위에 웹캠 영상
   imageMode(CORNER);
   image(video, 0, 0);
-  
+
   handleMouthOpen();
-  /* 
-  if(smokeCount >= 1)
-  {
-    isSmoking = true;
-  }
-  if(isSmoking)
-  {
-    cigaretteSmoke.generate();
-    cigaretteSmoke.update();
-    cigaretteSmoke.display();
-  }*/
-  push();
-  textAlign(CENTER,CENTER);
-  textSize(48);
-  fill(0);
-  text("담배가 담배꽁초가 될 때까지 입을 벌려주세요",width/2,height/2+200);
-  pop();
 }
 
 function handleMouthOpen() {
@@ -240,8 +218,7 @@ function handleMouthOpen() {
       if (!mouthOpen) {
         mouthOpen = true;
         mouthOpenStart = millis();
-      } 
-      else {
+      } else {
         // 2초 유지되면 흡연 카운트 올리기
         if (millis() - mouthOpenStart > 2000) {
           mouthOpen = false;
@@ -256,82 +233,14 @@ function handleMouthOpen() {
 
 function incrementSmoke() {
   smokeCount++;
-  if(smokeCount === 1) {
-    cigaImg = imgCiga2;
-    /*cigaretteX1 = width/2 + cigaImg.width/2;
-    cigaretteY1 = height/2 + cigaImg.height/2;*/
-  }
-  else if (smokeCount === 2) 
-  {
-    cigaImg = imgCiga1;
-  }
-    
+  if      (smokeCount === 1) cigaImg = imgCiga2;
+  else if (smokeCount === 2) cigaImg = imgCiga1;
   else if (smokeCount === 3) {
     cigaImg = imgCigaTrash;
     // 5초 뒤 장면 2로 전환
-    setTimeout(() => scene = 2, 3000);
+    setTimeout(() => scene = 2, 5000);
   }
-  
 }
-/*
-class CigaretteSmoke {
-  constructor(baseX, baseY) {
-    this.baseX = baseX;    // 연기 생성 기준 X 좌표 (담배 끝)
-    this.baseY = baseY;    // 연기 생성 기준 Y 좌표 (담배 끝)
-    this.particles = [];   // 내부적으로 관리할 연기 입자 배열
-  }
-
-  // a) 매 프레임 “한두 개” 입자를 생성할지 호출
-  //    보통 draw()나 drawScene1() 안에서,
-  //    담배를 피우는 동안만 generate()를 호출하세요.
-  generate() {
-    // 새 입자 하나 만들기
-    // noiseOffset과 size를 각각 랜덤하게 부여해서 자연스러운 움직임
-    const p = {
-      x: this.baseX + random(-5, 5),   // 담배 끝 주변에서 살짝 좌우 퍼짐
-      y: this.baseY,                   // 담배 끝 위치
-      age: 0,
-      lifetime: 120,                   // 총 120프레임(약 2초) 동안 존재
-      alpha: 200,                      // 초기 투명도
-      fadeSpeed: 200 / 120,            // alpha가 매 프레임 얼마나 줄어들지
-      size: random(10, 18),            // 입자 크기 (원형 반지름)
-      noiseOffset: random(1000)        // 노이즈 움직임을 위한 오프셋
-    };
-    this.particles.push(p);
-  }
-
-  // b) 모든 입자를 갱신(update)하고, 수명이 다 된 건 제거
-  update() {
-    for (let i = this.particles.length - 1; i >= 0; i--) {
-      const p = this.particles[i];
-
-      // 1) 나이(age) 증가
-      p.age++;
-
-      // 2) 위로 천천히 올라가되, noise를 섞어 약간 좌우로 흔들리도록
-      p.y -= 0.7;
-      p.x += map(noise(p.noiseOffset + p.age * 0.02), 0, 1, -1, +1);
-
-      // 3) alpha를 점진적으로 줄여서 페이드 아웃
-      p.alpha -= p.fadeSpeed;
-      if (p.alpha < 0) p.alpha = 0;
-
-      // 4) 수명(lifetime) 초과 시 배열에서 제거
-      if (p.age >= p.lifetime) {
-        this.particles.splice(i, 1);
-      }
-    }
-  }
-
-  // c) 모든 입자를 화면에 그려줌
-  display() {
-    noStroke();
-    for (const p of this.particles) {
-      fill(180, p.alpha);          // 연한 회색 + 현재 투명도
-      ellipse(p.x, p.y, p.size);   // 원형(ellipse)으로 표현
-    }
-  }
-}*/
 
 function drawScene2() {
   
@@ -374,13 +283,11 @@ function drawScene2() {
         image(defaultTownImg,   0, 0, width, height);
     }
   }
-  push();
-  fill(0);
-  textSize(30);
-  //text(`mouse: ${mouseX}, ${mouseY}`, 10, 20);
 
-  text("담배 꽁초를 버릴 장소를 선택해주세요",width/2,height/2);
-  pop();
+  fill(0);
+  noStroke();
+  textSize(16);
+  //text(`mouse: ${mouseX}, ${mouseY}`, 10, 20);
 }
 
 function isOver(area) {
@@ -433,8 +340,6 @@ function mousePressed() {
 
 //장면 3 시작
 function drawScene3() {
-  push();
-  imageMode(CENTER);
   drawSkyWithGradient();
   drawSunlight();
   drawSun();
@@ -462,7 +367,7 @@ function drawScene3() {
   drawShrubs();
   drawFlowers();
 
-  pop();
+  
   setTimeout(() => scene = 4, 3000);
 }
 
@@ -488,7 +393,7 @@ function drawSunlight() {
 
 function drawSun() {
   fill(255, 255, 150);
-  ellipse(width * 0.8, height * 0.15, width * 0.1,width * 0.1);
+  ellipse(width * 0.8, height * 0.15, width * 0.08, height * 0.1);
 }
 
 function drawClover(xFactor, yFactor) {
@@ -545,28 +450,6 @@ function drawScene4()
     drawVideo();
     handleHandDetection();
     displayCigarette();
-
-    if(hasDroppedOnce)
-    {
-        if(modeMountain && modeSwar)
-        {
-            setTimeout(() => scene = 8, 3000);
-        }
-        else if(modeMountain && !modeSwar)
-        {
-            setTimeout(() => {scene = 5;startTime = millis()}, 3000);
-        }
-        else if(!modeMountain && modeSwar)
-        { 
-            setTimeout(() => scene = 2, 3000);
-        }
-    }
-    push();
-    fill(255);
-    textAlign(CENTER);
-    textSize(30);
-    text("손을 활짝 피면 담배꽁초를 버리게 됩니다.",width/2,height/2);
-    pop();
 }
 
 function handleHandDetection() {
@@ -579,7 +462,6 @@ function handleHandDetection() {
       cigaretteY = height - cigaretteSize / 2;
       hasDroppedOnce = true;
       //startTime = millis();
-      /*
       if(modeMountain && modeSwar)
       {
         setTimeout(() => scene = 8, 3000);
@@ -591,7 +473,7 @@ function handleHandDetection() {
       else if(!modeMountain && modeSwar)
       { 
         setTimeout(() => scene = 2, 3000);
-      }*/
+      }
     }
   }
 }
@@ -609,23 +491,15 @@ function areAllFingersExtended(fingers) {
 
 // 📦 담배 이미지 출력
 function displayCigarette() {
-  push();
-  imageMode(CORNER);
   image(cigarette, cigaretteX - cigaretteSize / 2, cigaretteY - cigaretteSize / 2, cigaretteSize, cigaretteSize);
-  pop();
 }
 
 // 📦 비디오 출력
 function drawVideo() {
-  push();
-  imageMode(CORNER);
   image(video2, 0, 0, width, height);
-  pop();
 }
 
 function drawScene5() {
-  push();
-  imageMode(CENTER);
   background(255);
   drawSkyWithGradient();
   drawSunlight();
@@ -655,7 +529,6 @@ function drawScene5() {
   image(BfireImg, 0, treePosY + 70, imgW + 500, imgH + 300);
   image(BfireImg, 700, treePosY + 70, imgW + 500, imgH + 300);
 
-  image(BfireImg, 1500, treePosY + 70, imgW + 500, imgH + 300);
   // 🌫 연기 생성 위치 (위치만 조정됨, X 좌표 그대로)
   smokeParticles.push(new SmokeParticle(treePosX + 320, treePosY - 160 ));  
   smokeParticles.push(new SmokeParticle(treePosX + 330, treePosY - 160 ));
@@ -680,7 +553,6 @@ function drawScene5() {
     rect(0, 0, width, height);      // 전체 화면 덮기
     setTimeout(() => scene = 2, 3000);
   }
-  pop();
 }
 
 
@@ -923,7 +795,7 @@ function drawScene9()
     "문수현: 마우스와 키보드 이외의 새로운 인터렉션을 공부해 볼 수 있어서 유익했습니다.",
     "서예린: 한 학기동안 배운 것으로 하나의 작품을 만들어서 뿌듯하다",
     "AI를 이용해 제작한 콘텐츠: 모든 콘텐츠 / 마을 전체 화면, 산불, 수질 오염 등",
-    "AI 사용 비율: 70% > AI를 사용해 기본적인 코드 틀을 잡은 뒤 위치, 색 등 디테일한 부분 직접 수정",
+    "AI 사용 비율: 80% > AI를 사용해 기본적인 코드 틀을 잡은 뒤 위치, 색 등 디테일한 부분 직접 수정",
     "사용한 기능, 문법 사항: if문, for 문, loadImage, handPose, 배열, class 등"
   ];
 
@@ -946,12 +818,12 @@ function drawScene9()
     let lines = ceil(textWidth(paragraphs[i]) / textBoxWidth);
 
     // 문단 간 간격 설정
-    if (i === 0) {
+    if (i === 1) {
       y += lines * 36 + 40; // 문단 띄기
     } else {
       y += lines * 36 + 20;
     }
   }
 
-  //setTimeout(() => scene = 1, 5000);
+  setTimeout(() => scene = 1, 5000);
 }

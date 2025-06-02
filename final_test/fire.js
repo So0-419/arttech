@@ -1,27 +1,24 @@
-let treeImg, tree2Img, sqImg, maImg, LfireImg, BfireImg;
+let treeImg;
+let tree2Img;
 let treePosX, treePosY, treeScale;
-let smokeParticles = [];
-
 
 function preload() {
   treeImg = loadImage("tree.png");
   tree2Img = loadImage("tree2.png");
   sqImg = loadImage("sq.png");
   maImg = loadImage("ma.png");
-  LfireImg = loadImage("Lfire.png");
-  BfireImg = loadImage("Bfire.png");
 }
 
 function setup() {
-  fullscreen(true);
-  createCanvas(windowWidth, windowHeight); // 반드시 fullscreen 이후에!
+  createCanvas(windowWidth, windowHeight);
   imageMode(CENTER);
+  noLoop();
+
+  fullscreen(true);
 
   treePosX = width * 0.5;
   treePosY = height * 0.6;
   treeScale = 0.3;
-
-  startTime = millis(); // 시작 시간 저장
 }
 
 function mousePressed() {
@@ -32,11 +29,36 @@ function mousePressed() {
 }
 
 function draw() {
-  
+  drawSkyWithGradient();
+  drawSunlight();
+  drawSun();
+
+  // 이미지 나무만 출력 (나무 그림 제거됨)
+  let imgW = treeImg.width * treeScale;
+  let imgH = treeImg.height * treeScale;
+
+  image(treeImg, treePosX, treePosY, imgW, imgH+ 150);
+  image(treeImg, treePosX + 400, treePosY, imgW+60, imgH+150);
+  image(treeImg, treePosX + 400, treePosY, imgW+60, imgH+150);
+  image(treeImg, treePosX- 600 , treePosY, imgW+60, imgH+150);
+ image(treeImg, treePosX- 150 , treePosY, imgW+60, imgH+150);
+
+  image(tree2Img, treePosX - 300, treePosY, imgW, imgH+150);
+  image(tree2Img, treePosX + 250, treePosY, imgW, imgH+150);
+ image(tree2Img, treePosX -187, treePosY, imgW, imgH+150);
+  image(tree2Img, treePosX +600, treePosY, imgW, imgH+150);
+  image(tree2Img, treePosX -70, treePosY+50, imgW, imgH+50);
+  image(tree2Img, treePosX +90, treePosY, imgW, imgH+50);
+
+  image(maImg, treePosX - 400, treePosY, imgW, imgH+200);
+  image(maImg, treePosX +200, treePosY, imgW, imgH+130);
+
+
+
+
+  drawShrubs();
+  drawFlowers();
 }
-   
-
-
 
 function drawSkyWithGradient() {
   for (let x = 0; x < width; x++) {
@@ -62,10 +84,43 @@ function drawSun() {
   fill(255, 255, 150);
   ellipse(width * 0.8, height * 0.15, width * 0.08, height * 0.1);
 }
+/*
+// ✅ 소나무 (stroke 색상 변경: #2C952C)
+function drawPineTree(xFactor, yFactor) {
+  let x = width * xFactor;
+  let y = height * yFactor;
 
+  fill(101, 67, 33);
+  rect(x - width * 0.01, y, width * 0.02, height * 0.13);
+
+  stroke('#2C952C');
+  strokeWeight(3);
+  fill(34, 139, 34);
+  triangle(x - width * 0.04, y + height * 0.05, x + width * 0.04, y + height * 0.05, x, y - height * 0.07);
+  triangle(x - width * 0.036, y - height * 0.03, x + width * 0.036, y - height * 0.03, x, y - height * 0.13);
+  triangle(x - width * 0.03, y - height * 0.07, x + width * 0.03, y - height * 0.07, x, y - height * 0.16);
+  noStroke();
+}
+
+// ✅ 원나무 (stroke 색상 변경: #6DD66D)
+function drawRoundTree(xFactor, yFactor) {
+  let x = width * xFactor;
+  let y = height * yFactor;
+
+  fill(101, 67, 33);
+  rect(x - width * 0.01, y, width * 0.02, height * 0.13);
+
+  stroke('#6DD66D');
+  strokeWeight(3);
+  fill(50, 180, 50);
+  ellipse(x, y - height * 0.07, width * 0.15, height * 0.22);
+  noStroke();
+}
+*/
 function drawClover(xFactor, yFactor) {
   let x = width * xFactor;
   let y = height * yFactor;
+
   fill(0, 150, 0);
   ellipse(x - 5, y - 5, 10, 10);
   ellipse(x + 5, y - 5, 10, 10);
@@ -76,16 +131,20 @@ function drawClover(xFactor, yFactor) {
 function drawDandelion(xFactor, yFactor) {
   let x = width * xFactor;
   let y = height * yFactor;
+
   fill(255, 215, 0);
   ellipse(x, y, 15, 15);
   fill(0, 128, 0);
   rect(x - 1, y, 2, 15);
 }
 
+// ✅ drawTrees 제거됨
+
 function drawShrubs() {
   drawClover(0.15, 0.75);
   drawClover(0.16, 0.76);
   drawClover(0.17, 0.77);
+  drawClover(0.6, 0.78);
 }
 
 function drawFlowers() {
@@ -94,46 +153,4 @@ function drawFlowers() {
   drawDandelion(0.27, 0.80);
   drawDandelion(0.53, 0.80);
   drawDandelion(0.7, 0.83);
-}
-
-class SmokeParticle {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    this.alpha = 180;
-    this.age = 0;
-    this.lifetime = 180;
-    this.path = [];
-
-    this.baseX = x;
-    this.baseY = y;
-    this.noiseOffset = random(1000);
-    this.size = random(20, 40);
-  }
-
-  update() {
-    this.age++;
-    this.y -= 0.7;
-    this.x = this.baseX + map(noise(this.noiseOffset + this.age * 0.01), 0, 1, -20, 20);
-    this.path.push({ x: this.x, y: this.y });
-    if (this.path.length > 20) {
-      this.path.shift();
-    }
-    this.alpha = map(this.age, 0, this.lifetime, 180, 0);
-  }
-
-  display() {
-    noFill();
-    stroke(150, this.alpha);
-    strokeWeight(20); // 연기 크기 2배
-    beginShape();
-    for (let p of this.path) {
-      curveVertex(p.x, p.y);
-    }
-    endShape();
-  }
-
-  isFinished() {
-    return this.age > this.lifetime;
-  }
 }
